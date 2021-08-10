@@ -23,7 +23,6 @@ const fetchService = (queryString, type = "user") => {
       p1.remove();
     }
   };
-  
 
   const createUserList = (obj) => {
     clearTags();
@@ -41,10 +40,23 @@ const fetchService = (queryString, type = "user") => {
     }
   };
 
+  const createSearchReposList = (obj) => {
+    clearTags();
+    console.log("in creatSearchlist");
+    for (const item of obj.items) {
+      li = document.createElement("li");
+      li.setAttribute("data-id", item.id);
+      li.innerHTML = `
+        <b>${item.name}</b>`;
+      ulUser.appendChild(li);
+      
+    }
+  };
+
   const createRepolist = (obj) => {
     console.log(obj);
     clearTags();
-    
+
     const p1 = document.querySelector("p[name='user']");
     if (p1 !== null) {
       p1.remove();
@@ -74,7 +86,7 @@ const fetchService = (queryString, type = "user") => {
       .catch((e) => {
         console.log(e);
       });
-  } else {
+  } else if (type === "repos") {
     return fetch(
       `https://api.github.com/users/${queryString}/repos?per_page=100`,
       confObj
@@ -82,6 +94,19 @@ const fetchService = (queryString, type = "user") => {
       .then((resp) => resp.json())
       .then((obj) => {
         createRepolist(obj);
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+  } else {
+    // search by repo , bonus stretch here /search/repositories?q=tetris+language:assembly&sort=stars&order=desc
+    return fetch(
+      `https://api.github.com/search/repositories?q=${queryString}&sort=stars&order=desc&per_page=100`,
+      confObj
+    )
+      .then((resp) => resp.json())
+      .then((obj) => {
+        createSearchReposList(obj);
       })
       .catch((e) => {
         console.log(e);
@@ -94,11 +119,18 @@ const fetchService = (queryString, type = "user") => {
   document.addEventListener("DOMContentLoaded", (e) => {
     const searchText = document.getElementById("search");
     const searchBtn = document.querySelector("input[name='submit']");
-
+    
     //console.log("searchText: ",searchText.value);
     searchBtn.addEventListener("click", (e) => {
       e.preventDefault();
-      fetchService(searchText.value, "user");
+      const searchCond = document.querySelector('input[name = "searchChoice"]:checked').value;
+
+      console.log("search cond value: ",searchCond);
+      if (searchCond !== "repo") {
+        fetchService(searchText.value, "user");
+      } else {
+        fetchService(searchText.value, "searchByRepo");
+      }
     });
   });
 })();
